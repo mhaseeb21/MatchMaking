@@ -133,3 +133,23 @@ exports.getRequirementFeed = async (req, res) => {
 };
 
 
+exports.getMyRequirements = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { status } = req.query; // open | closed | undefined
+
+    const query = { user: userId };
+
+    if (status) {
+      query.status = status;
+    }
+
+    const posts = await RequirementPost.find(query)
+      .sort({ createdAt: -1 });
+
+    res.json(posts);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};

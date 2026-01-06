@@ -2,39 +2,41 @@ const express = require("express");
 const router = express.Router();
 const { body } = require("express-validator");
 const auth = require("../middleware/auth");
-const { createRequirementPost,closeRequirementPost,getRequirementFeed } = require("../controllers/requirementController");
 
-// POST /api/requirements
+const {
+  createRequirementPost,
+  closeRequirementPost,
+  getRequirementFeed,
+  getMyRequirements
+} = require("../controllers/requirementController");
+
+// ✅ FIRST: My requirements
+router.get("/my", auth, getMyRequirements);
+
+// Create requirement
 router.post(
   "/",
-  auth, // 🔐 JWT protection
+  auth,
   [
     body("genderPreference")
       .isIn(["male", "female"])
       .withMessage("Gender preference must be male or female"),
-
-    body("minAge")
-      .isInt({ min: 18 })
-      .withMessage("Minimum age must be at least 18"),
-
+    body("minAge").isInt({ min: 18 }),
     body("maxAge")
       .isInt()
-      .custom((value, { req }) => value >= req.body.minAge)
-      .withMessage("Max age must be greater than or equal to min age"),
-
-    body("city").notEmpty().withMessage("City is required"),
-    body("country").notEmpty().withMessage("Country is required"),
-    body("education").notEmpty().withMessage("Education is required"),
-    body("description")
-      .notEmpty()
-      .isLength({ max: 1000 })
-      .withMessage("Description is required (max 1000 chars)")
+      .custom((value, { req }) => value >= req.body.minAge),
+    body("city").notEmpty(),
+    body("country").notEmpty(),
+    body("education").notEmpty(),
+    body("description").notEmpty().isLength({ max: 1000 })
   ],
   createRequirementPost
 );
 
-// PATCH /api/requirements/:id/close
+// Close requirement
 router.patch("/:id/close", auth, closeRequirementPost);
+
+// Browse feed (OTHERS’ posts)
 router.get("/", auth, getRequirementFeed);
 
 module.exports = router;
